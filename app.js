@@ -5,12 +5,22 @@ const jwt = require("jsonwebtoken");
 const User = require("./db/userModel");
 const bodyParser = require("body-parser");
 const dbConnect = require("./db/dbConnect");
+const auth = require("./auth");
 // body parser configuration
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 //Establising connection with Atlas MongoDB
 dbConnect();
+
+//Setting us the CORS manually without using cors library
+app.use((req, res, next)=>{
+  res.setHeader("Access-Control-Allow-Origin","*");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  next();
+});
+
 app.get("/", (request, response, next) => {
   response.json({ message: "Hey! This is your server response!" });
   next();
@@ -39,7 +49,7 @@ app.post("/register", (req, res) => {
         });
     })
     .catch((e) => {
-      req.status(500).send({
+      res.status(500).send({
         message: "bcrypt failed to hash the password",
         e,
       });
@@ -84,5 +94,13 @@ app.post("/login", (req, res) => {
         e,
       });
     });
+}); 
+
+app.get("/free-endpoint", (req, res)=>{
+  res.json({message: "No Authorization required to access this."})
+});
+
+app.get("/auth-endpoint", auth, (req, res)=>{
+  res.json({message: "Authorization Success!"})
 });
 module.exports = app;
